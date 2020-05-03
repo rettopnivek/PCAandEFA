@@ -3,7 +3,7 @@
 # email: kevin.w.potter@gmail.com
 # Please email me directly if you
 # have any questions or comments
-# Last updated 2020-02-22
+# Last updated 2020-05-02
 
 # Table of contents
 # 1) PCA
@@ -282,7 +282,9 @@ plot.PCA = function( x, type = 'scree',
                      lbPos = 1.75,
                      pos_col = colors()[499],
                      neg_col = colors()[122],
-                     R_interval = .1
+                     R_interval = .1,
+                     labels = NULL,
+                     component = 1
                      ) {
 
   types = list(
@@ -464,6 +466,8 @@ plot.PCA = function( x, type = 'scree',
 
   }
 
+  ### Heatmap of correlations between scores and measures ###
+
   if ( type %in% types$heatmap ) {
 
     # Specify range of colors for the
@@ -582,30 +586,199 @@ plot.PCA = function( x, type = 'scree',
 
 
     axis( 4,
-          seq( 1, K+1, length.out = 4*2 + 1 ),
-          c( seq( -1, 0, .25 ),
-             seq( .25, 1, .25 ) ),
+          seq( 1, K+1, length.out = 2*2 + 1 ),
+          c( -1, -.5, 0, .5, 1 ),
           tick = F, line = axPos, cex.axis = axSz*.75 )
 
     pos = unique( round( seq( 1, x$K, length.out = 5 ) ) )
     axis( 1, pos - .5, pos,
-          tick = F, line = axPos, cex.axis = axSz )
+          tick = F, line = axPos - 2, cex.axis = axSz )
     mtext( 'Component',
-           side = 1, line = lbPos, cex = lbSz )
+           side = 1, line = lbPos - 2, cex = lbSz )
 
     mtext( 'Standardized variable',
            side = 2, line = lbPos, cex = lbSz )
+
+    if ( is.null( labels ) ) {
+
+      labels = names( x )
+
+      sel = nchar( labels ) > 3
+      if ( any( sel ) ) {
+        labels[sel] =
+          sapply( labels[sel],
+                  function(x) {
+                    tmp = strsplit( x, split = '', fixed = T )[[1]]
+                    return( paste( tmp[1:3], collapse = '' ) )
+                  } )
+      }
+
+    }
+
+    axis( 2,
+          1:K + .5,
+          labels,
+          tick = F, line = axPos, cex.axis = axSz )
 
     mtext( 'Correlations between observed and component scores',
            side = 3, line = lbPos, cex = lbSz )
 
   }
 
+  ### Segment plot of correlations between scores and measures ###
+
   if ( type %in% types$R ) {
+
+    N_corr = nrow( x$correlations )
+
+    xl = c( .5, N_corr + .5 + N_corr*.33 )
+    yl = c( -1, 1 )
+
+    plot( xl, yl,
+          type = 'n',
+          xaxt = 'n',
+          yaxt = 'n',
+          ylab = ' ',
+          xlab = ' ',
+          bty = 'n' )
+
+    # Grid lines
+    pos = seq( -1, 1, .25 )
+    segments( rep( xl[1], length( pos ) ), pos,
+              rep( N_corr+.5, length( pos ) ), pos,
+              lwd = lnSz, col = 'grey80' )
+
+    # Correlations for specified component
+    segments( 1:N_corr,
+              rep( 0, N_corr ),
+              1:N_corr,
+              x$correlations[,component],
+              lwd = lnSz )
+    points( 1:N_corr, x$correlations[,component], pch = 19 )
+
+    # Axes
+    pos = seq( -1, 1, .5 )
+    axis( 2, pos,
+          tick = F, line = axPos, cex.axis = axSz )
+    mtext( 'Correlation',
+           side = 2, line = lbPos, cex = lbSz )
+    axis( 1, 1:N_corr,
+          tick = F, line = axPos, cex.axis = axSz )
+    mtext( 'Measure',
+           side = 1, line = lbPos, cex = lbSz )
+
+    # Border
+    xl = c( .5, N_corr + .5 )
+    segments( xl[ c( 1, 1, 1, 2 ) ],
+              yl[ c( 1, 2, 1, 1 ) ],
+              xl[ c( 2, 2, 1, 2 ) ],
+              yl[ c( 1, 2, 2, 2 ) ],
+              lwd = lnSz, col = 'black' )
+
+    if ( is.null( labels ) ) {
+
+      labels = names( x )
+
+      sel = nchar( labels ) > 3
+      if ( any( sel ) ) {
+        labels[sel] =
+          sapply( labels[sel],
+                  function(x) {
+                    tmp = strsplit( x, split = '', fixed = T )[[1]]
+                    return( paste( tmp[1:3], collapse = '' ) )
+                  } )
+      }
+
+    }
+
+    legend(
+      N_corr + .5, yl[2], paste0( 1:N_corr, '. ', labels ),
+      bty = 'n',
+      cex = axSz,
+      xpd = T
+    )
+
+    mtext( paste( 'Component', component ),
+           side = 3, line = lbPos, cex = lbSz )
 
   }
 
+  ### Segment plot of squared correlations between scores and measures ###
+
   if ( type %in% types$R2 ) {
+
+
+    N_corr = nrow( x$correlations )
+
+    xl = c( .5, N_corr + .5 + N_corr*.33 )
+    yl = c( 0, 1 )
+
+    plot( xl, yl,
+          type = 'n',
+          xaxt = 'n',
+          yaxt = 'n',
+          ylab = ' ',
+          xlab = ' ',
+          bty = 'n' )
+
+    # Grid lines
+    pos = seq( 0, 1, .125 )
+    segments( rep( xl[1], length( pos ) ), pos,
+              rep( N_corr+.5, length( pos ) ), pos,
+              lwd = lnSz, col = 'grey80' )
+
+    # Correlations for specified component
+    segments( 1:N_corr,
+              rep( 0, N_corr ),
+              1:N_corr,
+              x$correlations[,component]^2,
+              lwd = lnSz )
+    points( 1:N_corr, x$correlations[,component]^2, pch = 19 )
+
+    # Axes
+    pos = seq( 0, 1, .25 )
+    axis( 2, pos,
+          tick = F, line = axPos, cex.axis = axSz )
+    mtext( 'Squared correlation',
+           side = 2, line = lbPos, cex = lbSz )
+    axis( 1, 1:N_corr,
+          tick = F, line = axPos, cex.axis = axSz )
+    mtext( 'Measure',
+           side = 1, line = lbPos, cex = lbSz )
+
+    # Border
+    xl = c( .5, N_corr + .5 )
+    segments( xl[ c( 1, 1, 1, 2 ) ],
+              yl[ c( 1, 2, 1, 1 ) ],
+              xl[ c( 2, 2, 1, 2 ) ],
+              yl[ c( 1, 2, 2, 2 ) ],
+              lwd = lnSz, col = 'black' )
+
+    if ( is.null( labels ) ) {
+
+      labels = names( x )
+
+      sel = nchar( labels ) > 3
+      if ( any( sel ) ) {
+        labels[sel] =
+          sapply( labels[sel],
+                  function(x) {
+                    tmp = strsplit( x, split = '', fixed = T )[[1]]
+                    return( paste( tmp[1:3], collapse = '' ) )
+                  } )
+      }
+
+    }
+
+    legend(
+      N_corr + .5, yl[2], paste0( 1:N_corr, '. ', labels ),
+      bty = 'n',
+      cex = axSz,
+      xpd = T
+    )
+
+    mtext( paste( 'Component', component ),
+           side = 3, line = lbPos, cex = lbSz )
 
   }
 
