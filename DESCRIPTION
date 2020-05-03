@@ -1,0 +1,16 @@
+Package: PCAandEFA
+Title: Convenience Functions to Run PCA or EFA
+Version: 0.0.0.9000
+Authors@R: 
+  person(
+    "Kevin", "Potter", email = "kevin.w.potter@gmail.com", role = c("aut", "cre")
+  )
+Description:
+  The PCAandEFA package provides a set of functions to 
+  streamline running a principal components analysis (PCA) 
+  or an exploratory factor analysis (EFA).
+Depends: R (>= 3.0)
+License: MIT + License
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.2
